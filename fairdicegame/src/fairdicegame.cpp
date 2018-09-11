@@ -1,11 +1,11 @@
 #include "fairdicegame.hpp"
 
-void fairdicegame::reveal(uint64_t id, checksum256 seed) {
+void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
     require_auth(REVEALER);
     st_bet bet = find_or_error(id);
     assert_seed(seed, bet.seed_hash);
 
-    uint8_t random_roll = compute_random_roll(seed);
+    uint8_t random_roll = compute_random_roll(seed, bet.user_seed_hash);
     asset payout = asset(0, EOS_SYMBOL);
     if (random_roll < bet.roll_under) {
         payout = compute_payout(bet.roll_under, bet.amount);
@@ -17,13 +17,18 @@ void fairdicegame::reveal(uint64_t id, checksum256 seed) {
     }
     unlock(bet.amount);
     if (bet.referrer != _self) {
-        action(
-            permission_level{_self, N(active)},
-            N(eosio.token),
-            N(transfer),
-            make_tuple(
-                _self, bet.referrer, comput_referrer_reward(bet), referrer_memo(bet)))
-            .send();
+        // defer trx, no need to rely heavily
+        transaction trx;
+        trx.actions.emplace_back(permission_level{_self, N(active)},
+                                 N(eosio.token),
+                                 N(transfer),
+                                 make_tuple(
+                                     _self,
+                                     bet.referrer,
+                                     compute_referrer_reward(bet),
+                                     referrer_memo(bet)));
+
+        trx.send(bet.id, _self, false);
     }
     remove(bet);
     st_result result{.bet_id = bet.id,
@@ -34,6 +39,7 @@ void fairdicegame::reveal(uint64_t id, checksum256 seed) {
                      .random_roll = random_roll,
                      .seed = seed,
                      .seed_hash = bet.seed_hash,
+                     .user_seed_hash = bet.user_seed_hash,
                      .payout = payout};
     action(permission_level{_self, N(active)},
            LOG,
@@ -42,80 +48,47 @@ void fairdicegame::reveal(uint64_t id, checksum256 seed) {
         .send();
 }
 
-void fairdicegame::offer(account_name from,
-                         account_name to,
-                         asset quantity,
-                         string memo) {
+void fairdicegame::transfer(const account_name& from,
+                            const account_name& to,
+                            const asset& quantity,
+                            const string& memo) {
     if (from == _self || to != _self) {
         return;
     }
-    eosio_assert(quantity.symbol == EOS_SYMBOL, "quantity must be EOS symbol");
-    eosio_assert(quantity.is_valid(), "quantity invalid");
-    eosio_assert(quantity.amount >= 1000, "quantity must be greater than 0.1");
-
-    // remove space
-    memo.erase(std::remove_if(memo.begin(),
-                              memo.end(),
-                              [](unsigned char x) { return std::isspace(x); }),
-               memo.end());
-
-    string roll_under_str;
-    string seed_hash_str;
-    string expiration_str;
-    string signature_str;
-    string referrer_str;
 
     uint8_t roll_under;
     checksum256 seed_hash;
+    checksum160 user_seed_hash;
     uint64_t expiration;
-    account_name referrer = _self;
+    account_name referrer;
+    signature sig;
 
-    size_t pos;
-    pos = sub2sepa(memo, &roll_under_str, '-', 0, true);
-    pos = sub2sepa(memo, &seed_hash_str, '-', ++pos, true);
-    pos = sub2sepa(memo, &expiration_str, '-', ++pos, true);
+    parse_memo(memo, &roll_under, &seed_hash, &user_seed_hash, &expiration, &referrer, &sig);
 
-    if (memo.find('-', pos + 1) != string::npos) {
-        pos = sub2sepa(memo, &referrer_str, '-', ++pos, true);
-    }
-    signature_str = memo.substr(++pos);
+    //check quantity
+    assert_quantity(quantity);
 
-    eosio_assert(!signature_str.empty(), "no signature");
+    //check roll_under
+    assert_roll_under(roll_under, quantity);
 
-    roll_under = static_cast<uint8_t>(stoi(roll_under_str));
+    //check seed hash && expiration
+    assert_hash(seed_hash, expiration);
 
-    eosio_assert(roll_under >= 2 && roll_under <= 96,
-                 "roll_under overflow, must be greater than 2 and less than 96");
-
-    eosio_assert(
-        max_payout(roll_under, quantity) <= max_bonus(),
-        "offered overflow, expected earning is greater than the maximum bonus");
-
-    eosio_assert(!seed_hash_str.empty(), "no seed");
-    seed_hash = hex_to_sha256(seed_hash_str);
-    assert_hash(seed_hash);
-
-    expiration = stoull(expiration_str);
-    eosio_assert(expiration > now(), "seed hash expired");
-
-    string signed_from = memo.substr(0, memo.find_last_of('-'));
-
-    assert_signature(signed_from, signature_str);
-
-    if (!referrer_str.empty()) {
-        referrer = string_to_name(referrer_str.c_str());
-    }
-
+    //check referrer
     eosio_assert(referrer != from, "referrer can not be self");
 
-    st_bet _bet{.id = next_id(),
-                .player = from,
-                .referrer = referrer,
-                .amount = quantity,
-                .roll_under = roll_under,
-                .seed_hash = seed_hash,
-                .created_at = now()};
-    save(_bet, expiration);
+    //check signature
+    assert_signature(roll_under, seed_hash, expiration, referrer, sig);
+
+    const st_bet _bet{.id = next_id(),
+                      .player = from,
+                      .referrer = referrer,
+                      .amount = quantity,
+                      .roll_under = roll_under,
+                      .seed_hash = seed_hash,
+                      .user_seed_hash = user_seed_hash,
+                      .created_at = now()};
+    save(_bet);
     lock(quantity);
     action(permission_level{_self, N(active)},
            _self,
@@ -124,6 +97,6 @@ void fairdicegame::offer(account_name from,
         .send();
 }
 
-void fairdicegame::receipt(st_bet bet) {
+void fairdicegame::receipt(const st_bet& bet) {
     require_auth(_self);
 }

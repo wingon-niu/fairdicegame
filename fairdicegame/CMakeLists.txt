@@ -9,15 +9,13 @@ set_target_properties(${CMAKE_PROJECT_NAME}.wasm
 
 add_custom_target(${CMAKE_PROJECT_NAME}.abi ALL)
 
-set(ABI_FILE "${CMAKE_CURRENT_SOURCE_DIR}/abi/${CMAKE_PROJECT_NAME}.abi")
+set(ABI_FILE "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.abi")
 
 add_custom_command(
     TARGET ${CMAKE_PROJECT_NAME}.abi
     COMMAND eosiocpp -g  ${ABI_FILE}   "${CMAKE_CURRENT_SOURCE_DIR}/include/${CMAKE_PROJECT_NAME}.hpp"
 )
 
-if(EXISTS ${ABI_FILE})  
-configure_file(${ABI_FILE}  "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
-endif()
-
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${WASM_ROOT}/eosio.wasmsdk/include)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME}.abi POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${ABI_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/abi/${CMAKE_PROJECT_NAME}.abi"
+)

@@ -16,6 +16,7 @@ struct st_bet {
     asset amount;
     uint8_t roll_under;
     checksum256 seed_hash;
+    checksum160 user_seed_hash;
     uint64_t created_at;
 };
 
@@ -28,6 +29,7 @@ struct st_result {
     uint8_t random_roll;
     checksum256 seed;
     checksum256 seed_hash;
+    checksum160 user_seed_hash;
     asset payout;
 };
 

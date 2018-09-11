@@ -61,22 +61,37 @@ string sha256_to_hex(const checksum256& sha256) {
     return to_hex((char*)sha256.hash, sizeof(sha256.hash));
 }
 
+string sha1_to_hex(const checksum160& sha1) {
+    return to_hex((char*)sha1.hash, sizeof(sha1.hash));
+}
+
+uint64_t uint64_hash(const string& hash) {
+    return std::hash<string>{}(hash);
+}
+
 uint64_t uint64_hash(const checksum256& hash) {
-    const string hex = sha256_to_hex(hash);
-    return std::hash<string>{}(hex);
+    return uint64_hash(sha256_to_hex(hash));
 }
 
 checksum256 hex_to_sha256(const string& hex_str) {
+    eosio_assert(hex_str.length() == 64, "invalid sha256");
     checksum256 checksum;
     from_hex(hex_str, (char*)checksum.hash, sizeof(checksum.hash));
     return checksum;
 }
 
-size_t sub2sepa(const string& input,
-                string* output,
-                const char& separator,
-                const size_t& first_pos = 0,
-                const bool& required = false) {
+checksum160 hex_to_sha1(const string& hex_str) {
+    eosio_assert(hex_str.length() == 40, "invalid sha1");
+    checksum160 checksum;
+    from_hex(hex_str, (char*)checksum.hash, sizeof(checksum.hash));
+    return checksum;
+}
+
+size_t sub2sep(const string& input,
+               string* output,
+               const char& separator,
+               const size_t& first_pos = 0,
+               const bool& required = false) {
     eosio_assert(first_pos != string::npos, "invalid first pos");
     auto pos = input.find(separator, first_pos);
     if (pos == string::npos) {
