@@ -67,8 +67,6 @@ class fairdicegame : public contract {
     uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
         string mixed_seed = sha256_to_hex(seed1);
         mixed_seed += sha1_to_hex(seed2);
-        mixed_seed += uint64_string(tapos_block_prefix() * tapos_block_num());
-        mixed_seed += uint64_string(now());
         return uint64_hash(mixed_seed) % 100 + 1;
     }
 
