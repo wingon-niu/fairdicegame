@@ -9,15 +9,13 @@ set_target_properties(fairdicelogs.wasm
 
 add_custom_target(fairdicelogs.abi ALL)
 
-set(ABI_FILE "${CMAKE_CURRENT_SOURCE_DIR}/abi/fairdicelogs.abi")
+set(ABI_FILE "${CMAKE_CURRENT_BINARY_DIR}/fairdicelogs.abi")
 
 add_custom_command(
     TARGET fairdicelogs.abi
     COMMAND eosiocpp -g  ${ABI_FILE}   "${CMAKE_CURRENT_SOURCE_DIR}/include/fairdicelogs.hpp"
 )
 
-if(EXISTS ${ABI_FILE})  
-configure_file(${ABI_FILE}  "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
-endif()
-
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${WASM_ROOT}/eosio.wasmsdk/include)
+add_custom_command(TARGET fairdicelogs.abi POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${ABI_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/abi/fairdicelogs.abi"
+)
