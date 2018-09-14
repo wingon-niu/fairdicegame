@@ -123,8 +123,10 @@ class fairdicegame : public contract {
         auto index = _hash.get_index<N(by_expiration)>();
         auto upper_itr = index.upper_bound(_now);
         auto begin_itr = index.begin();
-        while (begin_itr != upper_itr) {
+        auto count = 0;
+        while ((begin_itr != upper_itr) && (count < 3)) {
             begin_itr = index.erase(begin_itr);
+            count++;
         }
 
         // save hash
