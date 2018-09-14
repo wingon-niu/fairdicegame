@@ -231,6 +231,13 @@ class fairdicegame : public contract {
                       strlen(seed_str.c_str()),
                       (const checksum256*)&hash);
     }
+
+    template <typename... Args>
+    void send_defer_action(Args&&... args) {
+        transaction trx;
+        trx.actions.emplace_back(std::forward<Args>(args)...);
+        trx.send(next_id(), _self, false);
+    }
 };
 
 extern "C" {

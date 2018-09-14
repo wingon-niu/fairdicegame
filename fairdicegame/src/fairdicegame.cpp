@@ -18,17 +18,13 @@ void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
     unlock(bet.amount);
     if (bet.referrer != _self) {
         // defer trx, no need to rely heavily
-        transaction trx;
-        trx.actions.emplace_back(permission_level{_self, N(active)},
-                                 N(eosio.token),
-                                 N(transfer),
-                                 make_tuple(
-                                     _self,
+        send_defer_action(permission_level{_self, N(active)},
+                          N(eosio.token),
+                          N(transfer),
+                          make_tuple(_self,
                                      bet.referrer,
                                      compute_referrer_reward(bet),
                                      referrer_memo(bet)));
-
-        trx.send(bet.id, _self, false);
     }
     remove(bet);
     st_result result{.bet_id = bet.id,
@@ -41,11 +37,11 @@ void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
                      .seed_hash = bet.seed_hash,
                      .user_seed_hash = bet.user_seed_hash,
                      .payout = payout};
-    action(permission_level{_self, N(active)},
-           LOG,
-           N(result),
-           result)
-        .send();
+
+    send_defer_action(permission_level{_self, N(active)},
+                      LOG,
+                      N(result),
+                      result);
 }
 
 void fairdicegame::transfer(const account_name& from,
