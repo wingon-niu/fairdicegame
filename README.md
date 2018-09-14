@@ -53,7 +53,7 @@ This is the amount of EOS you will be wagering.
 
 If your number is lower than your “ROLL UNDER TO WIN” number, you win! If you get a notice that your transaction failed, please check that you have enough CPU & bandwidth to make the transaction! You can view your EOS balance next to the “ROLL DICE” button. The table below the slider bar shows recent bets from all players across the world.
 
-> **\*Life is like a box of EOS and nobody knows how much EOS you would get in return. Mind your own risk and enjoy the game!***
+> **Life is like a box of EOS and nobody knows how much EOS you would get in return. Mind your own risk and enjoy the game!**
 
 
 ```
