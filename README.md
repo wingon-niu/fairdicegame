@@ -1,73 +1,128 @@
-# FairDice: the 1st open-sourced, rig-resistant and verifiably fair EOS dice game you are looking for!
+# How to design a blockchain-based provably fair online dice game
 
-> *Satoshi says “let there be fairness”, and there is blockchain.*
+In the old times, when we play a traditional dice game, the game fairness is usually endorsed by the game owner's reputation. If an extremely unlucky player loses 10 times in a row, there is no way for him to tell if he is just being unlucky or not.
+
+With the help of the blockchain technology, now we have a way to design an online provably fair dice game technically. Blockchain is a transparent, tamper-resistant online ledger that every one can audit.
+
+We are glad to see dozens of online dice games popping up in the EOS community recently. It's a pity that most of them are not open sourced nor rig resistant, still leaving inapparent potential backdoors for rigged betting, which is risky and can be largely improved. However, these close sourced dice games did help many rookies embrace the blockchain and get to know the beauty of the EOS world. Their efforts should not be forgotten and we appreciate their value added to the EOS ecology.
+
+Hereby our DappPub team would like to share the design for our open sourced FairDice game and enlighten those who are interested to unleash the power of DApps together.
+
+
+
+## 1. Randomness is the key
+
+The key point is that the game has to provide a kind of combined randomness that no single party could control alone.
+
+| ["How can I generate random numbers inside a smart contract?"](https://eosio.stackexchange.com/questions/41/how-can-i-generate-random-numbers-inside-a-smart-contract) |
+| :----------------------------------------------------------: |
+| ![image-20180913144954664](https://raw.githubusercontent.com/Dappub/fairdicegame/master/img/bm.png) |
+
+Just like what BM answered in the above question on StackExchange, for a two-party (```player```-```house```) dice game, the key point to provide fairness or rig-resistant randomness requires a 3 step process:
+
+> 1. Both parties  (  ```player``` & ```house```  ) commit hashes of their seeds:
 >
-> *God says “show me the code”, and here is the “FairDice”.*
+>    ```hash(player_seed)```  &   ```hash(house_seed)```
+>
+> 2. Both parties reveal their ```hash(player_seed)```  &  ```hash(house_seed)```
+>
+> 3. ```Roll``` = ```hash(player_seed + house_seed)```
 
-We are glad to see more and more interesting EOS dice games popping up in the EOS community. These blockchain-powered dice games have great advantages over those traditional centralized online casinos which could rig the game sneakingly. But most of the EOS dice games are not open sourced nor rig resistant, still leaving inapparent potential backdoors for rigged betting, which is risky and could be largely improved.
-
-```
-FairDice: the missing EOS dice game you dream of
-```
-
-[**https://dapp.pub/dice**](https://dapp.pub/dice)
-
-We released this open-sourced EOS “FairDice” for those who wish for a more fair EOS dice game and it is very likely to be the best EOS dice game you have ever played. FairDice is the 1st **open-sourced**, rig-resistant and verifiably fair dice game in the EOS world.
-
-- **Open-sourced smart contract**
-
-The dicing process is fully controlled by the open-sourced EOS smart-contract ([**fairdicegame**](https://eosflare.io/account/fairdicegame)) to ensure maximum transparency and all players could check the code themselves. Please refer to Github repo for interested detailed implementation.
-
-- **Rig-resistant design**
-
-We design a complex solution including a series of technical measures (e.g, a secure random function) to make sure the game is unbiased. The system and contract owner are not able to control the outcome of a bet or gain any advantage over other players.
-
-- **Verifiably fair**
-
-The FairDice game deployed on the EOS main-net is exactly the one we complied from our open-sourced smart contract. Ordinary players are not able to cheat in the game, but they could verify the fairness of the process and final outcome after each round themselves.
-
-- **Fast and low minimum bet (0.1EOS)**
-
-Based on our efficient contract implementation, the whole process is executed within a flash. You will see the instant outcome of each bet immediately. If you win the bet, the smart contract will send your winning EOS back to your account at once. The minimum bet is only 0.1 EOS. Both shrimps and whales could give it a shot.
-
-```
-How to play
-```
-
-Betting on FairDice is very simple.
-
-- Get the [**“Scatter”**](https://get-scatter.com/) wallet installed in your browser (Chrome/Firefox).
-
-FairDice supports the popular browser-based Scatter wallet and we offer instant EOS withdrawal and deposit.
-
-- Prepare an available EOS account that has at least 0.1 EOS.
-
-If you don’t have an EOS account yet, we recommend you using the DApp “[**signupeoseos**](https://medium.com/coinmonks/create-your-own-eos-account-easily-using-the-non-service-fee-dapp-signupeoseos-b15c5347f2fc)” to register your first EOS account. It is a frequent used EOS DApp we developed to help users create EOS accounts easily. And it has already been integrated in many popular mobile wallets (“Token Pocket”, “Meet.one”) as a widely used underlying EOS smart contract.
-
-- Set your “BET AMOUNT”.
-
-This is the amount of EOS you will be wagering.
-
-- Adjust the slider to change your chance of winning.
-- Click “ROLL DICE” to place your bet.
-
-If your number is lower than your “ROLL UNDER TO WIN” number, you win! If you get a notice that your transaction failed, please check that you have enough CPU & bandwidth to make the transaction! You can view your EOS balance next to the “ROLL DICE” button. The table below the slider bar shows recent bets from all players across the world.
-
-> **Life is like a box of EOS and nobody knows how much EOS you would get in return. Mind your own risk and enjoy the game!**
+The final ```Roll``` is random and it's a kind of combined randomness based on both ```house``` &&  ```player``` 's input (```house_seed```  &  ```player_seed```)
 
 
-```
-Contact us
-```
 
-If you have any feedback or question regarding rules or source code, please feel free to reach us.
+## 2. Sequence Diagram: a theoretical random dice roll process
 
-**@** [**Official site**](https://dapp.pub/)
+Based on BM's answer, we can draw a simple sequence diagram for a theoretical
+random dice roll process as below:
 
-**@** [**Discord**](http://hi.dapp.pub/)
+|   Sequence Diagram: a theoretical random dice roll process   |
+| :----------------------------------------------------------: |
+| ![image-20180915124605622](https://raw.githubusercontent.com/Dappub/fairdicegame/master/img/theoretical.png) |
 
-**@** [**Reddit**](https://www.reddit.com/user/dapppub)
+In step 2, the ```house``` creates a new ```house_seed``` for each bet and keeps it a secret until step 10.
 
-**@** [**Medium**](https://medium.com/dapppub)
+In step 3, the ```house``` calculates the corresponding ```house_hash``` =  ```hash(house_seed)```.
 
-**@** [**Github**](https://github.com/Dappub)
+In step 4, the ```house``` uploads the  ```house_hash``` to the blockchain. At this moment, the ```player``` still has no idea about what the ```house_seed``` is, but he is sure that the ```house_seed``` will not change during this bet because he can use the  ```house_hash``` to verify after the bet. Metaphorically speaking, ```house_hash``` is like a ```house```'s dark card placed on the table.
+
+In step 5, the ```player``` also creates his ```player_seed```.
+
+In step 6, the ```player``` calculates the corresponding ```player_hash``` = ```hash(player_seed)```.
+
+In step 7, the ```player``` uploads ```player_hash``` to the blockchain. At this moment, the ```house``` still has no clue about what ```player_seed``` is, but he is sure that the ```player_seed``` will not change during this bet because he can use the ```player_hash``` to verify later. Metaphorically speaking, ```player_hash``` is like a ```player```'s dark card placed on the table.
+
+In step 8, the ```player``` uploads his ```player_seed``` to the blockchain.
+
+In step 9, the open-sourced smart contract deployed on the blockchain verifies the ```player_seed``` & ```player_hash``` to see if it's a match.
+
+In step 10, the ```house``` uploads his ```house_seed``` to the blockchain.
+
+In step 11, the smart contract verifies the ```house_seed``` & ```house_hash``` to see if it's a match.
+
+In step 12, the smart contract calculates the ```hash(player_seed, house_seed)``` as the final roll number.
+
+
+
+## 3. Sequence Diagram: optimized "FairDice" random dice roll process
+
+Now we can give it a shot to start building our own blockchain-powered dice game. Compared with other blockchain infrastructure, EOS is preferred here as it's fast and provides good user experience.
+
+In fact, to optimize the whole process, it's unnecssary for ```player``` to upload both ```player_hash``` & ```player_seed``` in two steps.
+
+In other words, since the ```house``` has already placed his dark card (```house_hash```) on the table and not able to change it during the bet, the ```player``` could just place his open card (```player_seed```) on the table directly, instead of placing his dark card (```player_hash```) on the table and flipping the card (```player_seed```) in two steps.
+
+Therefore, we have optimized the whole process and improved user experience as below:
+
+| Sequence Diagram: optimized "FairDice" random dice roll process |
+| :----------------------------------------------------------: |
+| ![image-20180915125933975](https://raw.githubusercontent.com/Dappub/fairdicegame/master/img/optimized.png) |
+
+In step 1, since a "referral bonus" is introduced in the game, the ```referrer``` along with the```ROLL under to win``` will be sent to the ```house```.
+
+In step 2, the ```house``` creates a new ```house_seed``` for each bet and keeps it a secret until step 9.
+
+In step 3, the ```house``` calculates the corresponding ```house_hash``` =  ```hash(house_seed)```.
+
+In step 4, the ```house``` creates ```house_sign``` = ```sign(ROLL_under, hash(house_seed), expiration_time, referrer)```.
+
+In step 5, the ```house``` sends ```house_hash```, ```house_sign```, ... to the ```player```.
+
+In step 6, the ```player``` creates his ```player_seed```.
+
+In step 7, the ```player``` uploads the ```house_sign``` & ```player_seed``` to the EOS blockchain.
+
+In step 8, the smart contract deployed on EOS checks to prevent ```player``` from replay attacking the previous ```house_seed``` by cheating in the ```house_sign```.
+
+In step 9, the ```house``` uploads the ```house_seed```.
+
+In step 10, the smart contract verifies the ```house_seed``` to see if it matches with the ```house_hash``` so as to prevent ```house``` from swapping the ```house_seed``` sneakingly.
+
+In step 11, the smart contract calculates the final ```roll``` num based on the ```player_seed``` & ```house_seed```.
+
+
+
+## 4. Talk is cheap, show me the code
+
+In this case, since the randomness of the final roll number is dependent on both ```house``` side and ```player``` side, neither the ```house``` nor the ```player``` is able to rig the bet alone. In order to be rig resistant and provably fair, undoubtedly, the dice game has to be open sourced:
+
+> https://github.com/Dappub/fairdicegame
+
+If you'd like to play our "FairDice" game, here's the corresponding game page:
+
+> https://dapp.pub/dice
+
+You could find more info here:
+
+> https://medium.com/dapppub/fairdicegame-187afaff9e13
+
+
+
+------
+
+
+
+| ![logo@3x](https://raw.githubusercontent.com/Dappub/fairdicegame/master/img/logo.png) |
+| -----------------------------------------------------------: |
+| [**DappPub: Unleashing the power of DApps**](https://dapp.pub) |
