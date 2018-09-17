@@ -219,7 +219,7 @@ class fairdicegame : public contract {
         checksum256 digest;
         const char* data_cstr = data.c_str();
         sha256(data_cstr, strlen(data_cstr), &digest);
-        public_key key = str_to_pub(PUB_KEY);
+        public_key key = str_to_pub(PUB_KEY, false);
         assert_recover_key(&digest,
                            (char*)&sig.data,
                            sizeof(sig.data),

@@ -177,13 +177,38 @@ bool decode_base58(const string& str, vector<unsigned char>& vch) {
 
 // Copied from https://github.com/bitcoin/bitcoin
 
-signature str_to_sig(string sig) {
-    string prefix("SIG_K1_");
-    sig = sig.substr(prefix.length());
+signature str_to_sig(const string& sig, const bool& checksumming = true) {
+    const auto pivot = sig.find('_');
+    eosio_assert(pivot != string::npos, "No delimiter in signature");
+    const auto prefix_str = sig.substr(0, pivot);
+    eosio_assert(prefix_str == "SIG", "Signature Key has invalid prefix");
+    const auto next_pivot = sig.find('_', pivot + 1);
+    eosio_assert(next_pivot != string::npos, "No curve in signature");
+    const auto curve = sig.substr(pivot + 1, next_pivot - pivot - 1);
+    eosio_assert(curve == "K1" || curve == "R1", "Incorrect curve");
+    const bool k1 = curve == "K1";
+    auto data_str = sig.substr(next_pivot + 1);
+    eosio_assert(!data_str.empty(), "Signature has no data");
     vector<unsigned char> vch;
-    decode_base58(sig, vch);
+
+    eosio_assert(decode_base58(data_str, vch), "Decode signature failed");
+
+    eosio_assert(vch.size() == 69, "Invalid signature");
+
+    if (checksumming) {
+        array<unsigned char, 67> check_data;
+        copy_n(vch.begin(), 65, check_data.begin());
+        check_data[65] = k1 ? 'K' : 'R';
+        check_data[66] = '1';
+
+        checksum160 check_sig;
+        ripemd160(reinterpret_cast<char*>(check_data.data()), 67, &check_sig);
+
+        eosio_assert(memcmp(&check_sig.hash, &vch.end()[-4], 4) == 0, "Signature checksum mismatch");
+    }
+
     signature _sig;
-    unsigned int type = 0;
+    unsigned int type = k1 ? 0 : 1;
     _sig.data[0] = (uint8_t)type;
     for (int i = 1; i < sizeof(_sig.data); i++) {
         _sig.data[i] = vch[i - 1];
@@ -191,11 +216,22 @@ signature str_to_sig(string sig) {
     return _sig;
 }
 
-public_key str_to_pub(string pubkey) {
+public_key str_to_pub(const string& pubkey, const bool& checksumming = true) {
     string pubkey_prefix("EOS");
     auto base58substr = pubkey.substr(pubkey_prefix.length());
     vector<unsigned char> vch;
-    decode_base58(base58substr, vch);
+    eosio_assert(decode_base58(base58substr, vch), "Decode public key failed");
+    eosio_assert(vch.size() == 37, "Invalid public key");
+    if (checksumming) {
+
+        array<unsigned char, 33> pubkey_data;
+        copy_n(vch.begin(), 33, pubkey_data.begin());
+
+        checksum160 check_pubkey;
+        ripemd160(reinterpret_cast<char*>(pubkey_data.data()), 33, &check_pubkey);
+
+        eosio_assert(memcmp(&check_pubkey.hash, &vch.end()[-4], 4) == 0, "Public key checksum mismatch");
+    }
     public_key _pub_key;
     unsigned int type = 0;
     _pub_key.data[0] = (char)type;
