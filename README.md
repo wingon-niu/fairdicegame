@@ -69,7 +69,7 @@ In step 12, the smart contract calculates the ```hash(player_seed, house_seed)``
 
 Now we can give it a shot to start building our own blockchain-powered dice game. Compared with other blockchain infrastructure, EOS is preferred here as it's fast and provides good user experience.
 
-In fact, to optimize the whole process, it's unnecssary for ```player``` to upload both ```player_hash``` & ```player_seed``` in two steps.
+In fact, to optimize the whole process, it's unnecessary for ```player``` to upload both ```player_hash``` & ```player_seed``` in two steps.
 
 In other words, since the ```house``` has already placed his dark card (```house_hash```) on the table and not able to change it during the bet, the ```player``` could just place his open card (```player_seed```) on the table directly, instead of placing his dark card (```player_hash```) on the table and flipping the card (```player_seed```) in two steps.
 
