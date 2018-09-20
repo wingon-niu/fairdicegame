@@ -66,8 +66,10 @@ class fairdicegame : public contract {
 
     uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
         string mixed_seed = sha256_to_hex(seed1);
-        mixed_seed += sha1_to_hex(seed2);
-        return uint64_hash(mixed_seed) % 100 + 1;
+        size_t hash = 0;
+        hash_combine(hash, sha256_to_hex(seed1));
+        hash_combile(hash, sha1_to_hex(seed2)));
+        return hash % 100 + 1;
     }
 
     asset compute_referrer_reward(const st_bet& bet) { return bet.amount / 200; }
