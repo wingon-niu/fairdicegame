@@ -65,6 +65,13 @@ string sha1_to_hex(const checksum160& sha1) {
     return to_hex((char*)sha1.hash, sizeof(sha1.hash));
 }
 
+// copied from boost https://www.boost.org/
+template <class T>
+inline void hash_combine(std::size_t& seed, const T& v) {
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 uint64_t uint64_hash(const string& hash) {
     return std::hash<string>{}(hash);
 }
