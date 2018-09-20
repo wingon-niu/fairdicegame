@@ -68,7 +68,7 @@ class fairdicegame : public contract {
         string mixed_seed = sha256_to_hex(seed1);
         size_t hash = 0;
         hash_combine(hash, sha256_to_hex(seed1));
-        hash_combile(hash, sha1_to_hex(seed2)));
+        hash_combine(hash, sha1_to_hex(seed2)));
         return hash % 100 + 1;
     }
 
