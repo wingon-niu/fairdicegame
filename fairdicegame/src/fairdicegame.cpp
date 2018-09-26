@@ -51,6 +51,9 @@ void fairdicegame::transfer(const account_name& from,
     if (from == _self || to != _self) {
         return;
     }
+    if ("Transfer bonus" == memo) {
+        return;
+    }
 
     uint8_t roll_under;
     checksum256 seed_hash;
