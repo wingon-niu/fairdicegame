@@ -1,8 +1,8 @@
 #include "utils.hpp"
 
 #define MAIN_SYMBOL S(4, SYS)
-#define REVEALER N(niuddddddddd)
-#define LOG N(niueeeeeeeee)
+#define REVEALER N(niuaaaaaaaaa)
+#define LOG N(niufffffffff)
 
 static const string PUB_KEY =
     "EOS4wpa8kRBbZof9JEpPAAgbnN65NhbBobW4x5gyxQoFfamhQCAMX";
