@@ -21,10 +21,10 @@ class fairdicegame : public contract {
     void reveal(const uint64_t& id, const checksum256& seed);
 
    private:
-    tb_bets _bets;
+    tb_bets      _bets;
     tb_fund_pool _fund_pool;
-    tb_hash _hash;
-    tb_global _global;
+    tb_hash      _hash;
+    tb_global    _global;
 
     void parse_memo(string memo,
                     uint8_t* roll_under,
@@ -64,49 +64,40 @@ class fairdicegame : public contract {
         *sig = str_to_sig(container);
     }
 
-    uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
-        size_t hash = 0;
-        hash_combine(hash, sha256_to_hex(seed1));
-        hash_combine(hash, sha1_to_hex(seed2));
-        return hash % 100 + 1;
+    void assert_quantity(const asset& quantity) {
+        eosio_assert(quantity.symbol == MAIN_SYMBOL, "only EOS token allowed");
+        eosio_assert(quantity.is_valid(), "quantity invalid");
+        eosio_assert(quantity.amount >= 1000, "transfer quantity must be greater than 0.1");
     }
 
-    asset compute_referrer_reward(const st_bet& bet) { return bet.amount / 200; }
-
-    uint64_t next_id() {
-        st_global global = _global.get_or_default(
-            st_global{.current_id = _bets.available_primary_key()});
-        global.current_id += 1;
-        _global.set(global, _self);
-        return global.current_id;
+    void assert_roll_under(const uint8_t& roll_under, const asset& quantity) {
+        eosio_assert(roll_under >= 2 && roll_under <= 96,
+                     "roll under overflow, must be greater than 2 and less than 96");
+        eosio_assert(
+            max_payout(roll_under, quantity) <= max_bonus(),
+            "offered overflow, expected earning is greater than the maximum bonus");
     }
 
-    string referrer_memo(const st_bet& bet) {
-        string memo = "bet id:";
-        string id = uint64_string(bet.id);
-        memo.append(id);
-        memo.append(" player: ");
-        string player = name{bet.player}.to_string();
-        memo.append(player);
-        memo.append(" referral reward! - dapp.pub/dice/");
-        return memo;
+    asset max_payout(const uint8_t& roll_under, const asset& offer) {
+        const double ODDS = 98.0 / ((double)roll_under - 1.0);
+        return asset(ODDS * offer.amount, offer.symbol);
     }
 
-    string winner_memo(const st_bet& bet) {
-        string memo = "bet id:";
-        string id = uint64_string(bet.id);
-        memo.append(id);
-        memo.append(" player: ");
-        string player = name{bet.player}.to_string();
-        memo.append(player);
-        memo.append(" winner! - dapp.pub/dice/");
-        return memo;
+    asset max_bonus() { return available_balance() / 100; }
+
+    asset available_balance() {
+        auto token = eosio::token(N(eosio.token));
+        const asset balance =
+            token.get_balance(_self, symbol_type(MAIN_SYMBOL).name());
+        const asset locked = get_fund_pool().locked;
+        const asset available = balance - locked;
+        eosio_assert(available.amount >= 0, "fund pool overdraw");
+        return available;
     }
 
-    st_bet find_or_error(const uint64_t& id) {
-        auto itr = _bets.find(id);
-        eosio_assert(itr != _bets.end(), "bet not found");
-        return *itr;
+    st_fund_pool get_fund_pool() {
+        st_fund_pool fund_pool{.locked = asset(0, MAIN_SYMBOL)};
+        return _fund_pool.get_or_create(_self, fund_pool);
     }
 
     void assert_hash(const checksum256& seed_hash, const uint64_t& expiration) {
@@ -137,73 +128,6 @@ class fairdicegame : public contract {
         });
     }
 
-    void assert_quantity(const asset& quantity) {
-        eosio_assert(quantity.symbol == EOS_SYMBOL, "only EOS token allowed");
-        eosio_assert(quantity.is_valid(), "quantity invalid");
-        eosio_assert(quantity.amount >= 1000, "transfer quantity must be greater than 0.1");
-    }
-
-    void assert_roll_under(const uint8_t& roll_under, const asset& quantity) {
-        eosio_assert(roll_under >= 2 && roll_under <= 96,
-                     "roll under overflow, must be greater than 2 and less than 96");
-        eosio_assert(
-            max_payout(roll_under, quantity) <= max_bonus(),
-            "offered overflow, expected earning is greater than the maximum bonus");
-    }
-
-    void save(const st_bet& bet) {
-        _bets.emplace(_self, [&](st_bet& r) {
-            r.id = bet.id;
-            r.player = bet.player;
-            r.referrer = bet.referrer;
-            r.amount = bet.amount;
-            r.roll_under = bet.roll_under;
-            r.seed_hash = bet.seed_hash;
-            r.user_seed_hash = bet.user_seed_hash;
-            r.created_at = bet.created_at;
-        });
-    }
-
-    void remove(const st_bet& bet) { _bets.erase(bet); }
-
-    void unlock(const asset& amount) {
-        st_fund_pool pool = get_fund_pool();
-        pool.locked -= amount;
-        eosio_assert(pool.locked.amount >= 0, "fund unlock error");
-        _fund_pool.set(pool, _self);
-    }
-
-    void lock(const asset& amount) {
-        st_fund_pool pool = get_fund_pool();
-        pool.locked += amount;
-        _fund_pool.set(pool, _self);
-    }
-
-    asset compute_payout(const uint8_t& roll_under, const asset& offer) {
-        return min(max_payout(roll_under, offer), max_bonus());
-    }
-    asset max_payout(const uint8_t& roll_under, const asset& offer) {
-        const double ODDS = 98.0 / ((double)roll_under - 1.0);
-        return asset(ODDS * offer.amount, offer.symbol);
-    }
-
-    asset max_bonus() { return available_balance() / 100; }
-
-    asset available_balance() {
-        auto token = eosio::token(N(eosio.token));
-        const asset balance =
-            token.get_balance(_self, symbol_type(EOS_SYMBOL).name());
-        const asset locked = get_fund_pool().locked;
-        const asset available = balance - locked;
-        eosio_assert(available.amount >= 0, "fund pool overdraw");
-        return available;
-    }
-
-    st_fund_pool get_fund_pool() {
-        st_fund_pool fund_pool{.locked = asset(0, EOS_SYMBOL)};
-        return _fund_pool.get_or_create(_self, fund_pool);
-    }
-
     void assert_signature(const uint8_t& roll_under,
                           const checksum256& seed_hash,
                           const uint64_t& expiration,
@@ -228,11 +152,73 @@ class fairdicegame : public contract {
                            sizeof(key.data));
     }
 
+    uint64_t next_id() {
+        st_global global = _global.get_or_default(
+            st_global{.current_id = _bets.available_primary_key()});
+        global.current_id += 1;
+        _global.set(global, _self);
+        return global.current_id;
+    }
+
+    void save(const st_bet& bet) {
+        _bets.emplace(_self, [&](st_bet& r) {
+            r.id = bet.id;
+            r.player = bet.player;
+            r.referrer = bet.referrer;
+            r.amount = bet.amount;
+            r.roll_under = bet.roll_under;
+            r.seed_hash = bet.seed_hash;
+            r.user_seed_hash = bet.user_seed_hash;
+            r.created_at = bet.created_at;
+        });
+    }
+
+    void lock(const asset& amount) {
+        st_fund_pool pool = get_fund_pool();
+        pool.locked += amount;
+        _fund_pool.set(pool, _self);
+    }
+
+    st_bet find_or_error(const uint64_t& id) {
+        auto itr = _bets.find(id);
+        eosio_assert(itr != _bets.end(), "bet not found");
+        return *itr;
+    }
+
     void assert_seed(const checksum256& seed, const checksum256& hash) {
         string seed_str = sha256_to_hex(seed);
         assert_sha256(seed_str.c_str(),
                       strlen(seed_str.c_str()),
                       (const checksum256*)&hash);
+    }
+
+    uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
+        size_t hash = 0;
+        hash_combine(hash, sha256_to_hex(seed1));
+        hash_combine(hash, sha1_to_hex(seed2));
+        return hash % 100 + 1;
+    }
+
+    asset compute_payout(const uint8_t& roll_under, const asset& offer) {
+        return min(max_payout(roll_under, offer), max_bonus());
+    }
+
+    string winner_memo(const st_bet& bet) {
+        string memo = "bet id:";
+        string id = uint64_string(bet.id);
+        memo.append(id);
+        memo.append(" player: ");
+        string player = name{bet.player}.to_string();
+        memo.append(player);
+        memo.append(" winner! - niu/dice/");
+        return memo;
+    }
+
+    void unlock(const asset& amount) {
+        st_fund_pool pool = get_fund_pool();
+        pool.locked -= amount;
+        eosio_assert(pool.locked.amount >= 0, "fund unlock error");
+        _fund_pool.set(pool, _self);
     }
 
     template <typename... Args>
@@ -241,20 +227,35 @@ class fairdicegame : public contract {
         trx.actions.emplace_back(std::forward<Args>(args)...);
         trx.send(next_id(), _self, false);
     }
+
+    asset compute_referrer_reward(const st_bet& bet) { return bet.amount / 200; }
+
+    string referrer_memo(const st_bet& bet) {
+        string memo = "bet id:";
+        string id = uint64_string(bet.id);
+        memo.append(id);
+        memo.append(" player: ");
+        string player = name{bet.player}.to_string();
+        memo.append(player);
+        memo.append(" referral reward! - niu/dice/");
+        return memo;
+    }
+
+    void remove(const st_bet& bet) { _bets.erase(bet); }
 };
 
 extern "C" {
-void apply(uint64_t receiver, uint64_t code, uint64_t action) {
-    fairdicegame thiscontract(receiver);
-
-    if ((code == N(eosio.token)) && (action == N(transfer))) {
-        execute_action(&thiscontract, &fairdicegame::transfer);
-        return;
+    void apply(uint64_t receiver, uint64_t code, uint64_t action) {
+        fairdicegame thiscontract(receiver);
+    
+        if ((code == N(eosio.token)) && (action == N(transfer))) {
+            execute_action(&thiscontract, &fairdicegame::transfer);
+            return;
+        }
+    
+        if (code != receiver) return;
+    
+        switch (action) { EOSIO_API(fairdicegame, (receipt)(reveal)) };
+        eosio_exit(0);
     }
-
-    if (code != receiver) return;
-
-    switch (action) { EOSIO_API(fairdicegame, (receipt)(reveal)) };
-    eosio_exit(0);
-}
 }

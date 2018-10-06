@@ -1,49 +1,5 @@
 #include "fairdicegame.hpp"
 
-void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
-    require_auth(REVEALER);
-    st_bet bet = find_or_error(id);
-    assert_seed(seed, bet.seed_hash);
-
-    uint8_t random_roll = compute_random_roll(seed, bet.user_seed_hash);
-    asset payout = asset(0, EOS_SYMBOL);
-    if (random_roll < bet.roll_under) {
-        payout = compute_payout(bet.roll_under, bet.amount);
-        action(permission_level{_self, N(active)},
-               N(eosio.token),
-               N(transfer),
-               make_tuple(_self, bet.player, payout, winner_memo(bet)))
-            .send();
-    }
-    unlock(bet.amount);
-    if (bet.referrer != _self) {
-        // defer trx, no need to rely heavily
-        send_defer_action(permission_level{_self, N(active)},
-                          N(eosio.token),
-                          N(transfer),
-                          make_tuple(_self,
-                                     bet.referrer,
-                                     compute_referrer_reward(bet),
-                                     referrer_memo(bet)));
-    }
-    remove(bet);
-    st_result result{.bet_id = bet.id,
-                     .player = bet.player,
-                     .referrer = bet.referrer,
-                     .amount = bet.amount,
-                     .roll_under = bet.roll_under,
-                     .random_roll = random_roll,
-                     .seed = seed,
-                     .seed_hash = bet.seed_hash,
-                     .user_seed_hash = bet.user_seed_hash,
-                     .payout = payout};
-
-    send_defer_action(permission_level{_self, N(active)},
-                      LOG,
-                      N(result),
-                      result);
-}
-
 void fairdicegame::transfer(const account_name& from,
                             const account_name& to,
                             const asset& quantity,
@@ -55,12 +11,12 @@ void fairdicegame::transfer(const account_name& from,
         return;
     }
 
-    uint8_t roll_under;
-    checksum256 seed_hash;
-    checksum160 user_seed_hash;
-    uint64_t expiration;
+    uint8_t      roll_under;
+    checksum256  seed_hash;
+    checksum160  user_seed_hash;
+    uint64_t     expiration;
     account_name referrer;
-    signature sig;
+    signature    sig;
 
     parse_memo(memo, &roll_under, &seed_hash, &user_seed_hash, &expiration, &referrer, &sig);
 
@@ -98,4 +54,48 @@ void fairdicegame::transfer(const account_name& from,
 
 void fairdicegame::receipt(const st_bet& bet) {
     require_auth(_self);
+}
+
+void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
+    require_auth(REVEALER);
+    st_bet bet = find_or_error(id);
+    assert_seed(seed, bet.seed_hash);
+
+    uint8_t random_roll = compute_random_roll(seed, bet.user_seed_hash);
+    asset payout = asset(0, MAIN_SYMBOL);
+    if (random_roll < bet.roll_under) {
+        payout = compute_payout(bet.roll_under, bet.amount);
+        action(permission_level{_self, N(active)},
+               N(eosio.token),
+               N(transfer),
+               make_tuple(_self, bet.player, payout, winner_memo(bet)))
+            .send();
+    }
+    unlock(bet.amount);
+    if (bet.referrer != _self) {
+        // defer trx, no need to rely heavily
+        send_defer_action(permission_level{_self, N(active)},
+                          N(eosio.token),
+                          N(transfer),
+                          make_tuple(_self,
+                                     bet.referrer,
+                                     compute_referrer_reward(bet),
+                                     referrer_memo(bet)));
+    }
+    remove(bet);
+    st_result result{.bet_id = bet.id,
+                     .player = bet.player,
+                     .referrer = bet.referrer,
+                     .amount = bet.amount,
+                     .roll_under = bet.roll_under,
+                     .random_roll = random_roll,
+                     .seed = seed,
+                     .seed_hash = bet.seed_hash,
+                     .user_seed_hash = bet.user_seed_hash,
+                     .payout = payout};
+
+    send_defer_action(permission_level{_self, N(active)},
+                      LOG,
+                      N(result),
+                      result);
 }

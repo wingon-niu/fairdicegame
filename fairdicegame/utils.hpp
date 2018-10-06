@@ -9,6 +9,7 @@
 using namespace eosio;
 using namespace std;
 
+// convert uint64_t to string
 string uint64_string(uint64_t input) {
     string result;
     uint8_t base = 10;
@@ -48,6 +49,7 @@ size_t from_hex(const string& hex_str, char* out_data, size_t out_data_len) {
     return out_pos - (uint8_t*)out_data;
 }
 
+// convert char* to hex string
 string to_hex(const char* d, uint32_t s) {
     std::string r;
     const char* to_hex = "0123456789abcdef";
@@ -57,10 +59,12 @@ string to_hex(const char* d, uint32_t s) {
     return r;
 }
 
+// convert checksum256 to hex string
 string sha256_to_hex(const checksum256& sha256) {
     return to_hex((char*)sha256.hash, sizeof(sha256.hash));
 }
 
+// convert checksum160 to hex string
 string sha1_to_hex(const checksum160& sha1) {
     return to_hex((char*)sha1.hash, sizeof(sha1.hash));
 }
