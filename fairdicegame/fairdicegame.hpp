@@ -199,6 +199,12 @@ class fairdicegame : public contract {
         return hash % 100 + 1;
     }
 
+//  uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
+//      string mixed_seed = sha256_to_hex(seed1);
+//      mixed_seed += sha1_to_hex(seed2);
+//      return uint64_hash(mixed_seed) % 100 + 1;
+//  }
+
     asset compute_payout(const uint8_t& roll_under, const asset& offer) {
         return min(max_payout(roll_under, offer), max_bonus());
     }
