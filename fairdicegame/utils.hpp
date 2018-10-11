@@ -227,7 +227,8 @@ signature str_to_sig(const string& sig, const bool& checksumming = true) {
     return _sig;
 }
 
-public_key str_to_pub(const string& pubkey, const bool& checksumming = true) {
+public_key str_to_pub(const char* pszPubKey, const bool& checksumming = true) {
+    string pubkey(pszPubKey);
     string pubkey_prefix("EOS");
     auto base58substr = pubkey.substr(pubkey_prefix.length());
     vector<unsigned char> vch;

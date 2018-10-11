@@ -4,7 +4,7 @@
 #define REVEALER N(niuaaaaaaaaa)
 #define LOG N(niufffffffff)
 
-static const string PUB_KEY =
+static const char* PUB_KEY =
     "EOS4wpa8kRBbZof9JEpPAAgbnN65NhbBobW4x5gyxQoFfamhQCAMX";
 
 // @abi table bets i64

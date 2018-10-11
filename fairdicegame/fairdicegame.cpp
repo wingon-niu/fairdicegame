@@ -4,6 +4,7 @@ void fairdicegame::transfer(const account_name& from,
                             const account_name& to,
                             const asset& quantity,
                             const string& memo) {
+    eosio::print("temp");
     if (from == _self || to != _self) {
         return;
     }
