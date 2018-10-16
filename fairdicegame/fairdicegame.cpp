@@ -4,7 +4,9 @@ void fairdicegame::transfer(const account_name& from,
                             const account_name& to,
                             const asset& quantity,
                             const string& memo) {
-    eosio::print("temp");
+
+    eosio::print("------ into fairdicegame :: transfer ------\n");
+
     if (from == _self || to != _self) {
         return;
     }
@@ -54,16 +56,23 @@ void fairdicegame::transfer(const account_name& from,
 }
 
 void fairdicegame::receipt(const st_bet& bet) {
+    eosio::print("------ into fairdicegame :: receipt ------\n");
+
     require_auth(_self);
 }
 
 void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
+    eosio::print("------ into fairdicegame :: reveal ------\n");
+
     require_auth(REVEALER);
     st_bet bet = find_or_error(id);
     assert_seed(seed, bet.seed_hash);
 
     uint8_t random_roll = compute_random_roll(seed, bet.user_seed_hash);
     asset payout = asset(0, MAIN_SYMBOL);
+
+    eosio::print_f("------ random_roll=%, bet.roll_under=% ------\n", std::to_string(random_roll), std::to_string(bet.roll_under));
+
     if (random_roll < bet.roll_under) {
         payout = compute_payout(bet.roll_under, bet.amount);
         action(permission_level{_self, N(active)},
@@ -83,7 +92,11 @@ void fairdicegame::reveal(const uint64_t& id, const checksum256& seed) {
                                      compute_referrer_reward(bet),
                                      referrer_memo(bet)));
     }
-    remove(bet);
+
+    eosio::print_f("------ compute_referrer_reward(bet)=% ------\n", std::to_string(compute_referrer_reward(bet).amount));
+
+//  remove(bet);
+
     st_result result{.bet_id = bet.id,
                      .player = bet.player,
                      .referrer = bet.referrer,

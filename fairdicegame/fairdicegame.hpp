@@ -186,11 +186,15 @@ class fairdicegame : public contract {
     }
 
     void assert_seed(const checksum256& seed, const checksum256& hash) {
-        string seed_str = sha256_to_hex(seed);
-        assert_sha256(seed_str.c_str(),
-                      strlen(seed_str.c_str()),
-                      (const checksum256*)&hash);
+        assert_sha256( (char *)&seed, sizeof(seed), (const checksum256 *)&hash );
     }
+
+//    void assert_seed(const checksum256& seed, const checksum256& hash) {
+//        string seed_str = sha256_to_hex(seed);
+//        assert_sha256(seed_str.c_str(),
+//                      strlen(seed_str.c_str()),
+//                      (const checksum256*)&hash);
+//    }
 
     uint8_t compute_random_roll(const checksum256& seed1, const checksum160& seed2) {
         size_t hash = 0;

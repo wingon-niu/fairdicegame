@@ -5,7 +5,7 @@
 #define LOG N(niufffffffff)
 
 static const char* PUB_KEY =
-    "EOS4wpa8kRBbZof9JEpPAAgbnN65NhbBobW4x5gyxQoFfamhQCAMX";
+    "EOS8Kt9V49XGa6qtTefw6yjv1xkLye6AawikJRAt7Nf8TpewX9GBB";
 
 // @abi table bets i64
 struct st_bet {
