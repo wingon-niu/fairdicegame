@@ -1,14 +1,14 @@
 
-a: ×¯¼Ò
-b: Íæ¼Ò
-c: ÍÆ¼öÈË
-d: »ù½ğºÏÔ¼
-e: diceºÏÔ¼
-f: logsºÏÔ¼
+a: åº„å®¶
+b: ç©å®¶
+c: æ¨èäºº
+d: åŸºé‡‘åˆçº¦
+e: diceåˆçº¦
+f: logsåˆçº¦
 
 
 
-# ¸ødiceºÏÔ¼ÕË»§ÊÚÓè¶Ô×Ô¼ºÕË»§µÄeosio.codeÈ¨ÏŞ£¬´Ó¶ø¿ÉÒÔÔÚºÏÔ¼ÀïÃæ½øĞĞ×ª³öEOSµÄ²Ù×÷
+# ç»™diceåˆçº¦è´¦æˆ·æˆäºˆå¯¹è‡ªå·±è´¦æˆ·çš„eosio.codeæƒé™ï¼Œä»è€Œå¯ä»¥åœ¨åˆçº¦é‡Œé¢è¿›è¡Œè½¬å‡ºEOSçš„æ“ä½œ
 cleos set account permission niueeeeeeeee active '{"threshold": 1,"keys": [{"key": "EOS6dfjMRaQjjaojewaMd75rjg6wBJQSj63EEVD6NwQmbyYqf2Uwm","weight": 1}],"accounts": [{"permission":{"actor":"niueeeeeeeee","permission":"eosio.code"},"weight":1}]}' owner -p niueeeeeeeee
 
 
@@ -23,9 +23,9 @@ expiration=1539768115
 referrer=niuccccccccc
 sig=SIG_K1_KBB6i8im8zUSfesLSHo5589UcAxxhXbKJVPnwo3t6ygqGNErc5ZzYAh8ckss8nPRAk3zwwF7aRyua64oCYu7i7J11q8NRt
 
-# Íæ¼Ò×ªÕËµ½diceºÏÔ¼£¬´øÉÏmemo
+# ç©å®¶è½¬è´¦åˆ°diceåˆçº¦ï¼Œå¸¦ä¸Šmemo
 cleos push action eosio.token transfer '[ "niubbbbbbbbb", "niueeeeeeeee", "1.0000 SYS", "71-ecf4847f95a3c07d4b9a50a48ad79cbb963d98efab9641984856bb3b7e649a1a-0dbe75545049da0d031d5ba7fb5f0abfb030ab18-1539768115-niuccccccccc-SIG_K1_KBB6i8im8zUSfesLSHo5589UcAxxhXbKJVPnwo3t6ygqGNErc5ZzYAh8ckss8nPRAk3zwwF7aRyua64oCYu7i7J11q8NRt" ]' -p niubbbbbbbbb@active
 
-# ×¯¼Ò¿ª½±
+# åº„å®¶å¼€å¥–
 cleos push action niueeeeeeeee reveal '[1, "79dbf9216224361564e3a5329789c9df38e040d17a6f07268e497b2ced273bca"]' -p niuaaaaaaaaa@active
 
